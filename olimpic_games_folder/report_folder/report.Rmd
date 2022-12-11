@@ -1,0 +1,177 @@
+---
+title: "report"
+author: "Anastasia Tatarentseva"
+date: "2022-12-11"
+output:
+  html_document: default
+  pdf_document: default
+---
+**Step 0.** Connected the necessary packages 
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+**Step 1.** All files from the folder olimpic_games_folder/data_folder were uploded and combined into one dataframe
+
+```{r}
+list.files(path = "https://github.com/anatatarentseva/BI_Stat_2022/tree/olimpic_games_branch/olimpic_games_folder/data_folder", pattern = "*.csv", full.names=TRUE)
+table_unified <- NULL
+for (i in list.files()) {
+  athlete_events <- read.csv(i) 
+  table_unified <- bind_rows(table_unified, athlete_events)
+}
+```
+
+**Step 2.** The received dataframe was adjusted:
+1) selected by age (the youngest participant in history is 10 years old, the oldest is 97 years old);
+2) removed participants with unknown age;
+3) removed the G sex;
+4) made the upper limit on height (the tallest person in the world is 251 cm);
+5) cut off the weight less than 20 kg;
+6) deleted rows with an unknown year;
+7) deleted rows with a non-three-character code;
+8) deleted rows with the NA member number;
+
+```{r}
+table_modifided <- table_unified[!(table_unified$Age < 9|table_unified$Age > 98|is.na(table_unified$Age)|table_unified$Sex == "G"|table_unified$Height > 251|table_unified$Weight < 20|is.na(table_unified$Year)|table_unified$NOC == 'JP'|is.na(table_unified$ID)), ]
+table_ok <- table_modifided[!is.na(table_modifided$ID), ]
+```
+
+**Step 3.** Found out the age of the youngest athletes of both sexes at the 1992 Olympics
+
+**Answer: Female - 12; Male - 14**
+
+```{r}
+min(table_ok[table_ok$Year == 1992 & table_ok$Sex == 'M', ]$Age)
+min(table_ok[table_ok$Year == 1992 & table_ok$Sex == 'F', ]$Age)
+```
+
+**Step 4.** Calculated the average value and standard deviation of the Height variable  for athletes of each sex
+
+**Answer: Female mean - 167.8613; Male mean - 178.965; Female sd - 8.768035; Male sd - 9.367877**
+
+```{r}
+mean(table_ok[table_ok$Sex == 'M', ]$Height)
+mean(table_ok[table_ok$Sex == 'F', ]$Height)
+
+sd(table_ok[table_ok$Sex == 'M', ]$Height)
+sd(table_ok[table_ok$Sex == 'F', ]$Height)
+```
+
+**Step 5.** Calculated the average value and standard deviation of the Height variable for female tennis players (sex = F) at the 2000 Olympics, rounded the answer to the first digit after the dot
+
+**Answer: Mean - 171.8; sd - 6.5**
+
+```{r}
+round(mean(table_ok[table_ok$Sex == 'F' & table_ok$Year == 2000 & table_ok$Sport == 'Tennis', ]$Height), digits = 1)
+round(sd(table_ok[table_ok$Sex == 'F' & table_ok$Year == 2000 & table_ok$Sport == 'Tennis', ]$Height), digits = 1)
+```
+
+**Step 6.** Determined which sport the heaviest athlete participated in at the 2006 Olympics
+
+**Answer: Skeleton**
+
+```{r}
+max(table_ok[table_ok$Sex == 'M' & table_ok$Year == 2006, ]$Weight)
+table_ok[table_ok$Sex == 'M' & table_ok$Year == 2006 & table_ok$Weight == 127, ]$Sport
+```
+
+**Step 7.** Determined how many gold medals were received by women from 1980 to 2010
+
+**Answer: 2167**
+
+```{r}
+table_woman <- table_ok[table_ok$Sex == 'F' & table_ok$Year >= 1980 & table_ok$Year <= 2010, ]$Medal
+table(table_woman)[which(names(table(table_woman)) == 'Gold')]
+```
+
+**Step 8.** Determined how many times the athlete John Aalberg participated in the Olympic Games in different years
+
+**Answer: 1992 - 4; 1994 - 4**
+
+```{r}
+table(table_ok[table_ok$Name == 'John Aalberg', ]$Year)
+```
+
+** Step 9.** Determined the least and most represented (by the number of participants) age groups of athletes at the 2008 Olympic Games. Possible age groups: [15-25), [25-35), [35-45), [45-55]
+
+**Answer: Most represented group [25,35); least represented group [45,55]**
+
+```{r}
+table(cut(table_ok[table_ok$Year == 2008, ]$Age, breaks = c(15, 25, 35, 45, 55), right = FALSE, include.lowest = TRUE))
+result_vector <- table(cut(table_ok[table_ok$Year == 2008, ]$Age, breaks = c(15, 25, 35, 45, 55), right = FALSE, include.lowest = TRUE))
+names(result_vector[which(result_vector == max(result_vector))])
+names(result_vector[which(result_vector == min(result_vector))])
+```
+
+**Step 10** Determined how much the number of sports at the 2002 Olympics has changed compared to The 1994 Olympics
+
+**Answer: 3**
+
+```{r}
+numer_2002 <-length(unique(table_ok[table_ok$Year == 2002, ]$Sport))
+numer_1994 <- length(unique(table_ok[table_ok$Year == 1994, ]$Sport))
+numer_2002 - numer_1994
+```
+
+**Step 11.** We have brought out the top 3 countries for each of the types of medals separately for the winter and summer Olympics
+
+**Answer:** 
+Winter: 
+- GOLD (Canada, Soviet Union, United States), 
+- SILVER (United States, Canada, Finland),
+- BRONZE (Finland, Sweden, United States); 
+Summer:
+- GOLD (United States, Soviet Union, Germany), 
+- SILVER (United States, Soviet Union, Australia), 
+- BRONZE (United States, Soviet Union, Germany)
+
+```{r}
+gold_winter_table <- table_ok[table_ok$Season == 'Winter' & table_ok$Medal == 'Gold', ]
+gold_winter <- sort(table(gold_winter_table$Team), decreasing = TRUE)
+gold_winter[1:3]
+
+silver_winter_table <- table_ok[table_ok$Season == 'Winter' & table_ok$Medal == 'Silver', ]
+silver_winter <- sort(table(silver_winter_table$Team), decreasing = TRUE)
+silver_winter[1:3]
+
+bronze_winter_table <- table_ok[table_ok$Season == 'Winter' & table_ok$Medal == 'Bronze', ]
+bronze_winter <- sort(table(bronze_winter_table$Team), decreasing = TRUE)
+bronze_winter[1:3]
+
+gold_summer_table <- table_ok[table_ok$Season == 'Summer' & table_ok$Medal == 'Gold', ]
+gold_summer <- sort(table(gold_summer_table$Team), decreasing = TRUE)
+gold_summer[1:3]
+
+silver_summer_table <- table_ok[table_ok$Season == 'Summer' & table_ok$Medal == 'Silver', ]
+silver_summer <- sort(table(silver_summer_table$Team), decreasing = TRUE)
+silver_summer[1:3]
+
+bronze_summer_table <- table_ok[table_ok$Season == 'Summer' & table_ok$Medal == 'Bronze', ]
+bronze_summer <- sort(table(bronze_summer_table$Team), decreasing = TRUE)
+bronze_summer[1:3]
+```
+
+**Step 12.** Created a new variable Height_z_scores and saved the values of the variable Height into it after its standardization
+
+```{r}
+Height_z_scores <- (table_ok$Height - mean(table_ok$Height))/sd(table_ok$Height)
+```
+
+**Step 13.** Created a new variable Height_min_max_scaled and save the values of the variable Height into it after applying min-max normalization to it
+
+```{r}
+Height_min_max_scaled <- (table_ok$Height - min(table_ok$Height))/(max(table_ok$Height) - min(table_ok$Height))
+```
+
+**Step 14.** Compared the height, weight and age of men and women who participated in the Winter Olympics
+
+```{r}
+table_winter <- table_ok[table_ok$Season == 'Winter', ]
+ggplot(table_winter, aes(x = Weight, y = Height, color = Sex)) +
+  geom_point(alpha = 0.1) +
+  stat_smooth(method = lm)
+```
+

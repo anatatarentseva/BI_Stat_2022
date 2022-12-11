@@ -4,21 +4,21 @@ Data analysis of Olympic Games participants over the past 120 years.
 
 A set of files in the format ".csv" is submitted for input, which contain the following information about athletes participating in the Olympic Games:
 
-ID – Unique number for each athlete
-Name – Athlete's name
-Sex – M or F
-Age – Integer
-Height – In centimeters
-Weight – In kilograms
-Team – Team name
-NOC – National Olympic Committee 3-letter code
-Games – Year and season
-Year – Integer
-Season – Summer or Winter
-City – Host city
-Sport – Sport
-Event – Event
-Medal – Gold, Silver, Bronze, or NA
+- ID – Unique number for each athlete
+- Name – Athlete's name
+- Sex – M or F
+- Age – Integer
+- Height – In centimeters
+- Weight – In kilograms
+- Team – Team name
+- NOC – National Olympic Committee 3-letter code
+- Games – Year and season
+- Year – Integer
+- Season – Summer or Winter
+- City – Host city
+- Sport – Sport
+- Event – Event
+- Medal – Gold, Silver, Bronze, or NA
 
 After uploading the files, the program cuts off the incorrect data. 
 

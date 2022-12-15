@@ -1,0 +1,105 @@
+---
+title: "report 2"
+author: "Anastasia Tatarentseva"
+date: "2022-12-15"
+output: html_document
+---
+
+**Step 0.** Connected the necessary packages 
+
+```{r}
+library(whitestrap)
+library(MASS)
+```
+
+**Step 1.** A complete linear model was built, having previously applied the standardization of predictors (without taking into account interaction of predictors
+
+A function to standardize predictors was written:
+
+```{r}
+function_standart <- function(v){ 
+  return((v - mean(v))/sd(v))
+}
+```
+
+Standardization of the entire date frame was conducted:
+
+```{r}
+df <- Boston
+df_standart <- apply(df, 2, function_standart)
+```
+
+Left only the standardization of predictors:
+
+```{r}
+df_medv <- df$medv
+df_standart_without_medv <- df_standart[ , 1:13]
+```
+
+The final dataframe with standardized predictors was received:
+
+```{r}
+df_itog <- as.data.frame(cbind(df_standart_without_medv, df_medv)) 
+```
+
+Next, a complete linear model will be built without taking into account the interaction of all coefficients
+
+```{r}
+summary(lm(df_medv~crim+zn+indus+chas+nox+rm+age+dis+rad+tax+ptratio+black+lstat, df_itog))
+```
+
+**Step 2.** Performed diagnostics of this model
+
+a) Consider the resulting table and analyze the value of Pr (the probability that this coefficient can be neglected) if less than 0.05 cannot be neglected
+
+b) Checking influential observations candidates for departure - indus and age - not influential observations
+
+```{r}
+summary(lm(df_medv~crim+zn+chas+nox+rm+dis+rad+tax+ptratio+black+lstat, df_itog))
+```
+
+As a result, we get that if we remove these parameters from the model, the correlation coefficient has not changed - so the parameters do not affect the model
+
+c) Independence of observations looking at the correlation table
+
+```{r}
+View((cor(df_itog))^2)
+```
+
+There are good dependencies: indus ~ nox, indus ~ dis, indus ~ tax, nox ~ age, nox ~ dis, dis ~ age, lstat ~ medv
+
+d. Normality of distribution and constancy of variance
+
+Found the remains:
+```{r}
+ost_mod <- residuals(lm(df_medv~crim+zn+chas+nox+rm+dis+rad+tax+ptratio+black+lstat, df_itog))
+```
+
+Looked at the normality of the distribution - normal distribution
+
+```{r}
+qqnorm(ost_mod)
+shapiro.test(ost_mod)
+hist(ost_mod)
+plot(ost_mod, df_itog$df_medv)
+```
+
+Using White's model for heteroscedanticity
+
+```{r}
+white_test(lm(df_medv~crim+zn+chas+nox+rm+dis+rad+tax+ptratio+black+lstat, df_itog))
+```
+
+The remnants are normally distributed
+
+**Step 3.**
+
+```{r}
+summary(lm(df_medv~crim+zn+chas+nox+rm+dis+rad+tax+ptratio+black+lstat, df_itog))
+```
+
+From here we look at the largest coefficient Estimate Std - lstat,
+
+```{r}
+plot(df_itog$df_medv, df_itog$lstat)
+```
